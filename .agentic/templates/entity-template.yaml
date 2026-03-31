@@ -1,0 +1,220 @@
+# Entity Definition Template
+# Use this template when defining new entity types
+
+# ⛔ BEFORE CREATING ANY ENTITY:
+# Check the reserved words list at:
+#   https://github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK/blob/main/porting/contracts/validation-rules.yaml
+#
+# VALIDATION RULES (see validation-rules.yaml for complete list):
+#   - Entity/Relationship type names: 1-26 characters, start with letter
+#   - Property names: 1-26 characters, start with letter
+#   - Ontology names: 1-52 characters, start with letter, NO hyphens
+#   - Avoid problematicWords (singular/plural conflicts like Factory/Factories)
+#
+# COMMONLY VIOLATED RESERVED WORDS:
+#   ❌ Order      → ✅ Use: SalesOrder, PurchaseOrder, TradeOrder, StockOrder
+#   ❌ Match      → ✅ Use: TradeMatch, OrderMatch
+#   ❌ Return     → ✅ Use: ProductReturn, OrderReturn
+#   ❌ Record     → ✅ Use: DataRecord, TradeRecord
+#   ❌ Key        → ✅ Use: AccessKey, PrimaryKey
+#   ❌ Node, Edge, Path, Value, Type, Count, Sum, Min, Max (all reserved)
+
+# Entity type definition
+entity:
+  name: "{EntityName}"  # ⛔ MUST NOT be a reserved GQL word!
+  description: "{Brief description of what this entity represents}"
+  
+  # Key definition - MUST be string or int
+  key:
+    name: "{KeyPropertyName}"
+    type: string  # or: int
+    description: "Unique identifier for {EntityName}"
+  
+  # Static properties (stored in Lakehouse)
+  # ⛔ CRITICAL: The key property MUST be included as the FIRST property
+  static_properties:
+    - name: "{KeyPropertyName}"  # ⛔ KEY MUST BE FIRST!
+      type: string  # Must match key.type
+      description: "Unique identifier (same as entity key)"
+      required: true
+      
+    - name: "{PropertyName}"
+      type: string  # Allowed: string, int, double, boolean, datetime
+      description: "{What this property represents}"
+      required: true
+      
+    - name: "{PropertyName2}"
+      type: datetime
+      description: "{Description}"
+      required: false
+  
+  # Timeseries properties (optional - stored in Eventhouse)
+  # ⛔ CRITICAL: In the TTL file, add "(timeseries)" in rdfs:comment for each property!
+  # Example TTL:
+  #   :Temperature a owl:DatatypeProperty ;
+  #       rdfs:label "Temperature" ;
+  #       rdfs:comment "Current temperature reading (timeseries)" ;
+  #       rdfs:domain :Sensor ;
+  #       rdfs:range xsd:double .
+  timeseries_properties:
+    - name: "{MetricName}"
+      type: double  # Usually double or int for metrics
+      unit: "{unit of measure}"
+      description: "{What this metric measures}"
+      ttl_comment: "{description} (timeseries)"  # ⛔ Include "(timeseries)" in TTL!
+      
+    - name: "{MetricName2}"
+      type: double
+      unit: "{unit}"
+      description: "{Description}"
+      ttl_comment: "{description} (timeseries)"
+
+  # Data binding configuration
+  bindings:
+    static:
+      source: lakehouse
+      table: "{DimTableName or FactTableName}"
+      key_column: "{KeyColumnInTable}"
+      
+    timeseries:  # Only if timeseries_properties exist
+      source: eventhouse
+      table: "{TimeseriesTableName}"
+      timestamp_column: Timestamp
+      key_column: "{KeyColumnInTable}"
+
+# =============================================================================
+# ENTITY TYPE NAMING RULES (from Microsoft Fabric Ontology Docs)
+# =============================================================================
+# 1. Length: 1–26 characters
+# 2. Pattern: ^[a-zA-Z][a-zA-Z0-9_-]{0,25}$
+# 3. Must start with a letter
+# 4. Can contain letters, numbers, hyphens and underscores
+# 5. ⛔ MUST NOT BE A RESERVED WORD - Check validation-rules.yaml!
+
+# =============================================================================
+# ⛔ GQL RESERVED WORDS - NEVER USE AS ENTITY OR PROPERTY NAMES
+# =============================================================================
+# Canonical source: https://github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK/blob/main/porting/contracts/validation-rules.yaml
+# 
+# COMMON VIOLATIONS (see validation-rules.yaml for complete reserved words list):
+#   ❌ Order      → ✅ SalesOrder, PurchaseOrder, TradeOrder, StockOrder
+#   ❌ Match      → ✅ TradeMatch, OrderMatch
+#   ❌ Return     → ✅ ProductReturn, OrderReturn
+#   ❌ Node       → ✅ NetworkNode, GraphNode
+#   ❌ Edge       → ✅ NetworkEdge, Connection
+#   ❌ Path       → ✅ RoutePath, NetworkPath
+#   ❌ Record     → ✅ DataRecord, TradeRecord
+#   ❌ Key        → ✅ AccessKey, PrimaryKey
+#   ❌ Label      → ✅ ItemLabel, ProductLabel
+#   ❌ Value      → ✅ AssetValue, TradeValue
+#   ❌ Type       → ✅ AssetType, OrderType
+#
+# ALL GQL KEYWORDS ARE RESERVED (case-insensitive):
+#   MATCH, RETURN, FILTER, WHERE, LET, ORDER, LIMIT, OFFSET, DISTINCT,
+#   GROUP, BY, ASC, DESC, AND, OR, NOT, TRUE, FALSE, NULL, IS, IN,
+#   STARTS, ENDS, CONTAINS, WITH, AS, NODE, EDGE, PATH, TRAIL, UNION, ALL,
+#   count, sum, avg, min, max, coalesce, size, labels, nodes, edges
+
+# =============================================================================
+# PROPERTY NAMING RULES (from Microsoft Fabric Ontology Docs)
+# =============================================================================
+# 1. Length: 1–26 characters
+# 2. Pattern: ^[a-zA-Z][a-zA-Z0-9_-]{0,25}$
+# 3. ⚠️ MUST be UNIQUE across ALL entity types in the ENTIRE ontology
+# 4. Must start with a letter
+# 5. Can contain letters, numbers, hyphens and underscores
+# 6. ⛔ MUST NOT be a GQL reserved word (see list above)
+# 7. Recommendation: Use entity prefix for uniqueness (e.g., Product_Name, Batch_Status)
+
+# =============================================================================
+# TYPE CONSTRAINTS (from Microsoft Fabric Graph Docs)
+# =============================================================================
+# KEY TYPES:      string OR int ONLY (never datetime, boolean, or double)
+# PROPERTY TYPES: string, int, double, boolean, datetime
+# 
+# Graph Supported Data Types:
+#   - Boolean (true/false)
+#   - Double (64-bit floating point)
+#   - Integer (64-bit signed integers)
+#   - String (Unicode character strings)
+#   - Zoned DateTime (timestamps with timezone)
+#
+# ⚠️ NEVER use 'decimal' - Fabric Graph does NOT support Decimal type (returns NULL)
+# Use 'double' instead for all monetary/precision values
+
+# =============================================================================
+# TTL TIMESERIES ANNOTATION (CRITICAL)
+# =============================================================================
+# For properties bound to Eventhouse (timeseries data), add "(timeseries)" in rdfs:comment.
+# This ensures the property is classified as timeseries in the Fabric API.
+#
+# Static property (Lakehouse) - no annotation needed:
+#   :TargetTempC a owl:DatatypeProperty ;
+#       rdfs:domain :RefrigerationUnit ;
+#       rdfs:range xsd:double ;
+#       rdfs:label "TargetTempC" .
+#
+# Timeseries property (Eventhouse) - MUST have (timeseries) annotation:
+#   :RefrigTemperatureC a owl:DatatypeProperty ;
+#       rdfs:domain :RefrigerationUnit ;
+#       rdfs:range xsd:double ;
+#       rdfs:label "RefrigTemperatureC" ;
+#       rdfs:comment "Current internal temperature (timeseries)" .
+#
+# ⛔ WITHOUT the (timeseries) annotation, eventhouse properties will be
+#    incorrectly classified as static and bound to Lakehouse!
+
+# =============================================================================
+# Example: Product Entity
+# =============================================================================
+example:
+  entity:
+    name: Product
+    description: "Manufactured product in the catalog"
+    
+    key:
+      name: ProductId
+      type: string
+      description: "Unique product identifier (e.g., PRD-001)"
+    
+    # ⛔ CRITICAL: Key property (ProductId) MUST be FIRST in the list
+    static_properties:
+      - name: ProductId  # ⛔ KEY MUST BE FIRST!
+        type: string
+        description: "Unique product identifier"
+        required: true
+        
+      - name: Product_Name
+        type: string
+        description: "Display name of the product"
+        required: true
+        
+      - name: Product_Category
+        type: string
+        description: "Product classification category"
+        required: true
+        
+      - name: Product_Status
+        type: string
+        description: "Current status (Active, Discontinued, Pending)"
+        required: true
+        
+      - name: Product_LaunchDate
+        type: datetime
+        description: "Date product was launched to market"
+        required: false
+    
+    timeseries_properties: []  # Product has no timeseries data
+    
+    bindings:
+      static:
+        source: lakehouse
+        table: DimProduct
+        key_column: ProductId
+      # ⛔ In bindings.yaml, ProductId MUST be listed in properties array:
+      #   properties:
+      #     - property: ProductId    # KEY FIRST!
+      #       column: ProductId
+      #       type: string
+      #     - property: Product_Name
+      #       ...

@@ -1,0 +1,6 @@
+ProdOrderId,ProdOrd_Qty,ProdOrd_Status,ProdOrd_DueDate
+PO-001,5,Completed,2026-03-28T00:00:00Z
+PO-002,3,In Progress,2026-04-02T00:00:00Z
+PO-003,4,In Progress,2026-04-05T00:00:00Z
+PO-004,2,Planned,2026-04-10T00:00:00Z
+PO-005,6,Completed,2026-03-25T00:00:00Z

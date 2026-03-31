@@ -1,0 +1,101 @@
+metadata:
+  name: "CarManufacturing"
+  version: "1.0"
+  created: "2026-03-31"
+  author: Fabric Ontology Demo Agent
+  specVersion: "3.7"
+
+demo:
+  company: "Apex Motors"
+  industry: "Automotive"
+  domain: "Manufacturing & Supply Chain"
+  description: "Production traceability for vehicle assembly, component sourcing, and supplier networks"
+  useCases:
+    - "Component traceability from vehicle to supplier"
+    - "Supplier impact analysis for recall management"
+    - "Production order tracking and facility assignment"
+
+ontology:
+  file: Ontology/car-manufacturing.ttl
+  namespace: http://example.com/ontology/car-manufacturing#
+  entities:
+    - name: Vehicle
+      key: VehicleId
+      keyType: string
+      hasTimeseries: false
+    - name: Assembly
+      key: AssemblyId
+      keyType: string
+      hasTimeseries: true
+    - name: Component
+      key: ComponentId
+      keyType: string
+      hasTimeseries: false
+    - name: Facility
+      key: FacilityId
+      keyType: string
+      hasTimeseries: true
+    - name: Supplier
+      key: SupplierId
+      keyType: string
+      hasTimeseries: false
+    - name: ProdOrder
+      key: ProdOrderId
+      keyType: string
+      hasTimeseries: false
+
+data:
+  lakehouse:
+    folder: Data/Lakehouse
+    tables:
+      - name: DimVehicle
+        file: DimVehicle.csv
+        rowCount: 15
+      - name: DimAssembly
+        file: DimAssembly.csv
+        rowCount: 20
+      - name: DimComponent
+        file: DimComponent.csv
+        rowCount: 15
+      - name: DimFacility
+        file: DimFacility.csv
+        rowCount: 3
+      - name: DimSupplier
+        file: DimSupplier.csv
+        rowCount: 5
+      - name: DimProdOrder
+        file: DimProdOrder.csv
+        rowCount: 5
+      - name: EdgeVehicleFacility
+        file: EdgeVehicleFacility.csv
+        rowCount: 15
+      - name: EdgeAssemblyVehicle
+        file: EdgeAssemblyVehicle.csv
+        rowCount: 20
+      - name: EdgeAssemblyComponent
+        file: EdgeAssemblyComponent.csv
+        rowCount: 30
+      - name: EdgeComponentSupplier
+        file: EdgeComponentSupplier.csv
+        rowCount: 15
+      - name: EdgeOrderFacility
+        file: EdgeOrderFacility.csv
+        rowCount: 5
+      - name: EdgeOrderVehicle
+        file: EdgeOrderVehicle.csv
+        rowCount: 15
+      - name: EdgeSupplierFacility
+        file: EdgeSupplierFacility.csv
+        rowCount: 10
+  eventhouse:
+    folder: Data/Eventhouse
+    tables:
+      - name: AssemblyTelemetry
+        file: AssemblyTelemetry.csv
+        rowCount: 48
+      - name: FacilityTelemetry
+        file: FacilityTelemetry.csv
+        rowCount: 40
+
+bindings:
+  file: Bindings/bindings.yaml

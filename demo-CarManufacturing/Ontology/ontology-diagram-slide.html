@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Motors — Car Manufacturing Ontology</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 1.5rem; }
+        .metrics {
+            display: flex; justify-content: center; gap: 1.5rem;
+            margin-bottom: 2rem; flex-wrap: wrap;
+        }
+        .metric {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 1rem 1.5rem;
+            text-align: center; min-width: 140px;
+        }
+        .metric .value { font-size: 1.75rem; font-weight: 700; color: #38bdf8; }
+        .metric .label { font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem; }
+        .diagram-container {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 2rem;
+            max-width: 1100px; margin: 0 auto 2rem;
+        }
+        .mermaid { display: flex; justify-content: center; }
+        .legend {
+            display: flex; justify-content: center; gap: 2rem;
+            flex-wrap: wrap; margin-top: 1rem;
+        }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+        .legend-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        .dot-entity { background: #38bdf8; }
+        .dot-ts { background: #34d399; }
+        .dot-rel { background: #fb923c; }
+        footer { text-align: center; color: #475569; font-size: 0.75rem; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <h1>Apex Motors — Car Manufacturing Ontology</h1>
+    <p class="subtitle">Production traceability across vehicles, assemblies, components &amp; suppliers</p>
+
+    <div class="metrics">
+        <div class="metric"><div class="value">6</div><div class="label">Entity Types</div></div>
+        <div class="metric"><div class="value">7</div><div class="label">Relationships</div></div>
+        <div class="metric"><div class="value">24</div><div class="label">Properties</div></div>
+        <div class="metric"><div class="value">6</div><div class="label">Timeseries Metrics</div></div>
+    </div>
+
+    <div class="diagram-container">
+        <div class="mermaid">
+erDiagram
+    Vehicle {
+        string VehicleId PK
+        string Vehicle_VIN
+        string Vehicle_Model
+        int Vehicle_Year
+        string Vehicle_Color
+        string Vehicle_Status
+    }
+    Assembly {
+        string AssemblyId PK
+        string Assembly_Name
+        string Assembly_Kind
+        string Assembly_Station
+    }
+    Component {
+        string ComponentId PK
+        string Comp_Name
+        string Comp_PartNumber
+        string Comp_LotBatch
+    }
+    Facility {
+        string FacilityId PK
+        string Facility_Name
+        string Facility_Location
+        int Facility_Capacity
+    }
+    Supplier {
+        string SupplierId PK
+        string Supplier_Name
+        string Supplier_Region
+        double Supplier_Rating
+    }
+    ProdOrder {
+        string ProdOrderId PK
+        int ProdOrd_Qty
+        string ProdOrd_Status
+        datetime ProdOrd_DueDate
+    }
+
+    Vehicle ||--o{ Facility : "BUILT_AT"
+    Assembly ||--o{ Vehicle : "ASSEMBLED_INTO"
+    Assembly ||--o{ Component : "USES_COMPONENT"
+    Component ||--o{ Supplier : "SUPPLIED_BY"
+    ProdOrder ||--o{ Facility : "PRODUCED_AT"
+    ProdOrder ||--o{ Vehicle : "ORDERS_VEHICLE"
+    Supplier ||--o{ Facility : "SHIPS_TO"
+        </div>
+        <div class="legend">
+            <div class="legend-item"><span class="legend-dot dot-entity"></span> Entity Type</div>
+            <div class="legend-item"><span class="legend-dot dot-ts"></span> Has Timeseries</div>
+            <div class="legend-item"><span class="legend-dot dot-rel"></span> Relationship</div>
+        </div>
+    </div>
+
+    <footer>Fabric Ontology Demo — Apex Motors Car Manufacturing | Generated March 2026</footer>
+
+    <script>mermaid.initialize({ startOnLoad: true, theme: 'dark' });</script>
+</body>
+</html>

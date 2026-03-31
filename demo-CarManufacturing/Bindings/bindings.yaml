@@ -1,0 +1,211 @@
+_schema_version: "1.0"
+
+metadata:
+  name: "CarManufacturing"
+  version: "1.0"
+  description: "Apex Motors car manufacturing production traceability demo"
+
+lakehouse:
+  name: "CarManufacturing_Lakehouse"
+  entities:
+    - entity: Vehicle
+      sourceTable: DimVehicle
+      keyColumn: VehicleId
+      file: Data/Lakehouse/DimVehicle.csv
+      properties:
+        - property: VehicleId
+          column: VehicleId
+          type: string
+        - property: Vehicle_VIN
+          column: Vehicle_VIN
+          type: string
+        - property: Vehicle_Model
+          column: Vehicle_Model
+          type: string
+        - property: Vehicle_Year
+          column: Vehicle_Year
+          type: int
+        - property: Vehicle_Color
+          column: Vehicle_Color
+          type: string
+        - property: Vehicle_Status
+          column: Vehicle_Status
+          type: string
+
+    - entity: Assembly
+      sourceTable: DimAssembly
+      keyColumn: AssemblyId
+      file: Data/Lakehouse/DimAssembly.csv
+      properties:
+        - property: AssemblyId
+          column: AssemblyId
+          type: string
+        - property: Assembly_Name
+          column: Assembly_Name
+          type: string
+        - property: Assembly_Kind
+          column: Assembly_Kind
+          type: string
+        - property: Assembly_Station
+          column: Assembly_Station
+          type: string
+
+    - entity: Component
+      sourceTable: DimComponent
+      keyColumn: ComponentId
+      file: Data/Lakehouse/DimComponent.csv
+      properties:
+        - property: ComponentId
+          column: ComponentId
+          type: string
+        - property: Comp_Name
+          column: Comp_Name
+          type: string
+        - property: Comp_PartNumber
+          column: Comp_PartNumber
+          type: string
+        - property: Comp_LotBatch
+          column: Comp_LotBatch
+          type: string
+
+    - entity: Facility
+      sourceTable: DimFacility
+      keyColumn: FacilityId
+      file: Data/Lakehouse/DimFacility.csv
+      properties:
+        - property: FacilityId
+          column: FacilityId
+          type: string
+        - property: Facility_Name
+          column: Facility_Name
+          type: string
+        - property: Facility_Location
+          column: Facility_Location
+          type: string
+        - property: Facility_Capacity
+          column: Facility_Capacity
+          type: int
+
+    - entity: Supplier
+      sourceTable: DimSupplier
+      keyColumn: SupplierId
+      file: Data/Lakehouse/DimSupplier.csv
+      properties:
+        - property: SupplierId
+          column: SupplierId
+          type: string
+        - property: Supplier_Name
+          column: Supplier_Name
+          type: string
+        - property: Supplier_Region
+          column: Supplier_Region
+          type: string
+        - property: Supplier_Rating
+          column: Supplier_Rating
+          type: double
+
+    - entity: ProdOrder
+      sourceTable: DimProdOrder
+      keyColumn: ProdOrderId
+      file: Data/Lakehouse/DimProdOrder.csv
+      properties:
+        - property: ProdOrderId
+          column: ProdOrderId
+          type: string
+        - property: ProdOrd_Qty
+          column: ProdOrd_Qty
+          type: int
+        - property: ProdOrd_Status
+          column: ProdOrd_Status
+          type: string
+        - property: ProdOrd_DueDate
+          column: ProdOrd_DueDate
+          type: datetime
+
+  relationships:
+    - relationship: BUILT_AT
+      sourceEntity: Vehicle
+      targetEntity: Facility
+      sourceTable: EdgeVehicleFacility
+      sourceKeyColumn: VehicleId
+      targetKeyColumn: FacilityId
+
+    - relationship: ASSEMBLED_INTO
+      sourceEntity: Assembly
+      targetEntity: Vehicle
+      sourceTable: EdgeAssemblyVehicle
+      sourceKeyColumn: AssemblyId
+      targetKeyColumn: VehicleId
+
+    - relationship: USES_COMPONENT
+      sourceEntity: Assembly
+      targetEntity: Component
+      sourceTable: EdgeAssemblyComponent
+      sourceKeyColumn: AssemblyId
+      targetKeyColumn: ComponentId
+
+    - relationship: SUPPLIED_BY
+      sourceEntity: Component
+      targetEntity: Supplier
+      sourceTable: EdgeComponentSupplier
+      sourceKeyColumn: ComponentId
+      targetKeyColumn: SupplierId
+
+    - relationship: PRODUCED_AT
+      sourceEntity: ProdOrder
+      targetEntity: Facility
+      sourceTable: EdgeOrderFacility
+      sourceKeyColumn: ProdOrderId
+      targetKeyColumn: FacilityId
+
+    - relationship: ORDERS_VEHICLE
+      sourceEntity: ProdOrder
+      targetEntity: Vehicle
+      sourceTable: EdgeOrderVehicle
+      sourceKeyColumn: ProdOrderId
+      targetKeyColumn: VehicleId
+
+    - relationship: SHIPS_TO
+      sourceEntity: Supplier
+      targetEntity: Facility
+      sourceTable: EdgeSupplierFacility
+      sourceKeyColumn: SupplierId
+      targetKeyColumn: FacilityId
+
+eventhouse:
+  name: "CarManufacturing_Telemetry"
+  database: "CarManufacturingDB"
+  entities:
+    - entity: Assembly
+      sourceTable: AssemblyTelemetry
+      keyColumn: AssemblyId
+      timestampColumn: Timestamp
+      file: Data/Eventhouse/AssemblyTelemetry.csv
+      rowCount: 48
+      properties:
+        - property: Asm_Torque
+          column: Asm_Torque
+          type: double
+        - property: Asm_TempC
+          column: Asm_TempC
+          type: double
+        - property: Asm_CycleTime
+          column: Asm_CycleTime
+          type: double
+
+    - entity: Facility
+      sourceTable: FacilityTelemetry
+      keyColumn: FacilityId
+      timestampColumn: Timestamp
+      file: Data/Eventhouse/FacilityTelemetry.csv
+      rowCount: 40
+      properties:
+        - property: Fac_EnergyKWh
+          column: Fac_EnergyKWh
+          type: double
+        - property: Fac_Throughput
+          column: Fac_Throughput
+          type: double
+        - property: Fac_DowntimeMin
+          column: Fac_DowntimeMin
+          type: double

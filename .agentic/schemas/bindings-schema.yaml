@@ -1,0 +1,381 @@
+# Bindings YAML Schema
+# Version: 1.1
+# Purpose: Machine-readable binding configuration for fabric-demo automation tool
+# Updated: January 2026
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: Fabric Ontology Demo Bindings
+description: |
+  Structured binding configuration for automation tools.
+  This file is the SOURCE OF TRUTH for the fabric-demo CLI tool.
+  
+  The schema supports the nested lakehouse/eventhouse structure used by
+  the demo generator. Properties use consistent naming:
+  - entity: Entity type name
+  - sourceTable: Table name in data source  
+  - keyColumn: Primary key column
+  - properties[]: Property-to-column mappings with "property" and "column" fields
+
+type: object
+required:
+  - _schema_version
+  - lakehouse
+
+properties:
+  _schema_version:
+    type: string
+    enum: ["1.0", "1.1"]
+    description: Schema version for compatibility checking
+
+  metadata:
+    type: object
+    description: Optional demo metadata
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+      description:
+        type: string
+      company:
+        type: string
+      domain:
+        type: string
+      created:
+        type: string
+
+  lakehouse:
+    type: object
+    description: Lakehouse configuration with entities and relationships
+    required:
+      - entities
+    properties:
+      name:
+        type: string
+        description: Lakehouse name
+      workspace:
+        type: string
+        description: Workspace ID (to be configured by user)
+      entities:
+        type: array
+        description: Entity bindings - one entry per entity type
+        items:
+          $ref: "#/definitions/lakehouseEntityBinding"
+      relationships:
+        type: array
+        description: Relationship bindings - one entry per relationship type
+        items:
+          $ref: "#/definitions/relationshipBinding"
+
+  eventhouse:
+    type: object
+    description: Eventhouse/KQL configuration for timeseries data
+    properties:
+      name:
+        type: string
+        description: Eventhouse name
+      database:
+        type: string
+        description: KQL database name
+      workspace:
+        type: string
+        description: Workspace ID (to be configured by user)
+      entities:
+        type: array
+        description: Timeseries entity bindings
+        items:
+          $ref: "#/definitions/eventhouseEntityBinding"
+
+definitions:
+  lakehouseEntityBinding:
+    type: object
+    required:
+      - entity
+      - sourceTable
+      - keyColumn
+      - properties
+    properties:
+      entity:
+        type: string
+        description: Entity type name (must match ontology)
+      sourceTable:
+        type: string
+        description: Source table name (e.g., DimCustomer, FactTransaction)
+      keyColumn:
+        type: string
+        description: |
+          Column that uniquely identifies entity instances.
+          ⛔ CRITICAL: This keyColumn MUST also be included as the FIRST entry
+          in the properties array. The Fabric API requires all entity key
+          properties to be explicitly mapped in propertyBindings.
+      file:
+        type: string
+        description: Path to CSV file relative to demo folder (e.g., Data/Lakehouse/DimCustomer.csv)
+      properties:
+        type: array
+        description: |
+          Property-to-column mappings.
+          ⛔ CRITICAL: The keyColumn MUST be included as the first property mapping.
+          Example: If keyColumn is 'CustomerId', properties MUST include:
+            - property: CustomerId
+              column: CustomerId
+              type: string
+        items:
+          $ref: "#/definitions/propertyMapping"
+
+  eventhouseEntityBinding:
+    type: object
+    required:
+      - entity
+      - sourceTable
+      - keyColumn
+      - timestampColumn
+      - properties
+    properties:
+      entity:
+        type: string
+        description: Entity type name (must match ontology)
+      sourceTable:
+        type: string
+        description: KQL table name (e.g., CardTelemetry)
+      keyColumn:
+        type: string
+        description: Column matching entity key for contextualization
+      timestampColumn:
+        type: string
+        description: Column containing timestamp values
+        default: Timestamp
+      file:
+        type: string
+        description: Path to CSV file relative to demo folder (e.g., Data/Eventhouse/CardTelemetry.csv)
+      rowCount:
+        type: integer
+        description: Expected number of rows (for validation)
+      properties:
+        type: array
+        description: Timeseries property mappings
+        items:
+          $ref: "#/definitions/propertyMapping"
+
+  propertyMapping:
+    type: object
+    required:
+      - property
+      - column
+      - type
+    properties:
+      property:
+        type: string
+        description: |
+          Ontology property name.
+          ⛔ The entity's key property (matching keyColumn) MUST be included
+          as the first entry in the properties array.
+      column:
+        type: string
+        description: Source column name (usually same as property name)
+      type:
+        type: string
+        enum: [string, int, double, boolean, datetime]
+        description: Data type (key properties are typically 'string' or 'int')
+      is_key:
+        type: boolean
+        default: false
+        description: |
+          Whether this is the entity key property.
+          When true, this property MUST match the keyColumn value.
+      propertyType:
+        type: string
+        enum: [static, timeseries]
+        default: static
+        description: |
+          Whether this property is static (lakehouse) or timeseries (eventhouse).
+          Properties in eventhouse.entities sections implicitly default to 'timeseries'.
+          Properties in lakehouse.entities sections implicitly default to 'static'.
+          Use this field to explicitly override the default behavior if needed.
+
+  relationshipBinding:
+    type: object
+    required:
+      - relationship
+      - sourceEntity
+      - targetEntity
+      - sourceTable
+      - sourceKeyColumn
+      - targetKeyColumn
+    properties:
+      relationship:
+        type: string
+        description: Relationship type name (must match ontology)
+      sourceEntity:
+        type: string
+        description: Source entity type name
+      targetEntity:
+        type: string
+        description: Target entity type name
+      sourceTable:
+        type: string
+        description: Table containing the relationship data (fact/bridge table)
+      sourceKeyColumn:
+        type: string
+        description: |
+          ⚠️ CRITICAL: Column that identifies the SOURCE entity.
+          This MUST be the SOURCE entity's OWN PRIMARY KEY, not a foreign key.
+          
+          The Fabric API validates that sourceKeyRefBindings.targetPropertyId
+          must be present in the source entity's EntityIdParts array.
+          
+          Example for "Customer OWNS CreditCard":
+            - sourceTable: DimCreditCard
+            - sourceKeyColumn: CustomerId (FK to Customer) ❌ WRONG!
+            - sourceKeyColumn: CardId (CreditCard's own key) ❌ Also wrong!
+          
+          Correct pattern for relationship binding:
+            - Source entity: Customer
+            - Target entity: CreditCard
+            - sourceTable: DimCreditCard (contains both keys)
+            - sourceKeyColumn: CustomerId (identifies which Customer)
+            - targetKeyColumn: CardId (identifies which CreditCard)
+      targetKeyColumn:
+        type: string
+        description: |
+          ⚠️ CRITICAL: Column that identifies the TARGET entity.
+          This MUST be named EXACTLY the same as the target entity's key property.
+          
+          The Fabric API validates that targetKeyRefBindings.targetPropertyId
+          must be present in the target EntityType's EntityIdParts array.
+          
+          If the target entity is "Facility" with key "FacilityId":
+            - targetKeyColumn: FacilityId ✅ CORRECT
+            - targetKeyColumn: OriginFacilityId ❌ WRONG (different name)
+          
+          If your table has FK columns with different names (e.g., OriginFacilityId),
+          you MUST create a separate edge table with the column renamed to match.
+
+# =============================================================================
+# EXAMPLE - Credit Fraud Demo
+# =============================================================================
+example:
+  _schema_version: "1.0"
+  
+  metadata:
+    name: CreditFraud
+    version: "1.0"
+    description: Credit card fraud detection ontology
+    
+  lakehouse:
+    name: CreditFraudLakehouse
+    entities:
+      - entity: Customer
+        sourceTable: DimCustomer
+        keyColumn: CustomerId
+        file: Data/Lakehouse/DimCustomer.csv
+        properties:
+          - property: CustomerId
+            column: CustomerId
+            type: string
+            is_key: true
+          - property: FullName
+            column: FullName
+            type: string
+          - property: RiskScore
+            column: RiskScore
+            type: double
+            
+      - entity: CreditCard
+        sourceTable: DimCreditCard
+        keyColumn: CardId
+        file: Data/Lakehouse/DimCreditCard.csv
+        properties:
+          - property: CardId
+            column: CardId
+            type: string
+            is_key: true
+          - property: CreditLimit
+            column: CreditLimit
+            type: double
+          - property: IsActive
+            column: IsActive
+            type: boolean
+    
+    relationships:
+      # ⚠️ CORRECT: Customer OWNS CreditCard
+      # The DimCreditCard table has CustomerId (FK) and CardId columns
+      # sourceKeyColumn is the FK that identifies the source entity (Customer)
+      # targetKeyColumn is the key that identifies the target entity (CreditCard)
+      - relationship: OWNS
+        sourceEntity: Customer
+        targetEntity: CreditCard
+        sourceTable: DimCreditCard
+        sourceKeyColumn: CustomerId    # FK to Customer
+        targetKeyColumn: CardId        # CreditCard's own key
+        
+      # ⚠️ CORRECT: CreditCard HAS_TRANSACTION Transaction
+      # The FactTransaction table has CardId (FK) and TransactionId columns
+      - relationship: HAS_TRANSACTION
+        sourceEntity: CreditCard
+        targetEntity: Transaction
+        sourceTable: FactTransaction
+        sourceKeyColumn: CardId          # FK to CreditCard  
+        targetKeyColumn: TransactionId   # Transaction's own key
+  
+  eventhouse:
+    name: CreditFraudEventhouse
+    database: CreditFraudDB
+    entities:
+      - entity: CreditCard
+        sourceTable: CardTelemetry
+        keyColumn: CardId
+        timestampColumn: Timestamp
+        file: Data/Eventhouse/CardTelemetry.csv
+        rowCount: 70
+        properties:
+          - property: TxnVelocity
+            column: TxnVelocity
+            type: double
+          - property: DailySpend
+            column: DailySpend
+            type: double
+
+# =============================================================================
+# VALIDATION NOTES
+# =============================================================================
+# 
+# ⚠️ CRITICAL: Lakehouse Requirements
+# 
+# 1. OneLake Security: MUST be DISABLED on the Lakehouse
+#    - If enabled, the Lakehouse cannot be used as a data source for ontology bindings
+#    - You will see "Lakehouse not available as data source" error
+#
+# 2. Lakehouse Schemas (Public Preview): MUST be DISABLED
+#    - The automation tool sets sourceSchema to null in all contextualizations
+#    - If schemas are enabled, you will see "An error occurred while loading the columns"
+#      when configuring relationship bindings in the Fabric UI
+#
+# 3. One Static Binding Per Entity
+#    - Each entity type supports only ONE static data binding
+#    - You cannot combine static data from multiple sources for a single entity
+#    - However, entity types DO support multiple timeseries bindings
+#
+# ⚠️ CRITICAL: Relationship Binding Rules
+#
+# sourceKeyColumn Rules:
+# 1. The source table must contain columns that link BOTH entities
+# 2. sourceKeyColumn = Column that identifies which SOURCE entity instance
+# 3. This must be a value that exists in the source entity's key
+# 
+# targetKeyColumn Rules (MOST COMMON ERROR SOURCE):
+# 1. targetKeyColumn MUST be named EXACTLY the same as target entity's key property
+# 2. The Fabric API validates this - mismatches cause binding failure
+# 3. If your table has FK columns with different names (OriginFacilityId, DestFacilityId),
+#    create SEPARATE EDGE TABLES with columns renamed to match the target's key
+#
+# Common pattern for 1:N relationships:
+#   - Relationship: Parent → Child
+#   - Source table: Child dimension/fact table (or edge table)
+#   - sourceKeyColumn: ParentId (FK in table)
+#   - targetKeyColumn: ChildId (PK - must match Child entity's key name)
+#
+# Example: Customer OWNS CreditCard
+#   - DimCreditCard table has: CardId (PK), CustomerId (FK)
+#   - sourceKeyColumn: CustomerId (identifies which Customer)
+#   - targetKeyColumn: CardId (identifies which CreditCard - must match CreditCard's key)

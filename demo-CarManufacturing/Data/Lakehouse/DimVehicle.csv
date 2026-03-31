@@ -1,0 +1,16 @@
+VehicleId,Vehicle_VIN,Vehicle_Model,Vehicle_Year,Vehicle_Color,Vehicle_Status
+VH-001,1APEX2026A0000001,Apex Sedan X,2026,Midnight Blue,Completed
+VH-002,1APEX2026A0000002,Apex Sedan X,2026,Pearl White,Completed
+VH-003,1APEX2026A0000003,Apex SUV Z,2026,Carbon Black,Completed
+VH-004,1APEX2026A0000004,Apex SUV Z,2026,Forest Green,In Assembly
+VH-005,1APEX2026A0000005,Apex Coupe R,2026,Racing Red,In Assembly
+VH-006,1APEX2026A0000006,Apex Sedan X,2026,Silver Metallic,Quality Check
+VH-007,1APEX2026A0000007,Apex Coupe R,2026,Midnight Blue,Completed
+VH-008,1APEX2026A0000008,Apex SUV Z,2026,Pearl White,Shipped
+VH-009,1APEX2026A0000009,Apex Sedan X,2026,Carbon Black,In Assembly
+VH-010,1APEX2026A0000010,Apex Coupe R,2026,Racing Red,Completed
+VH-011,1APEX2026A0000011,Apex SUV Z,2026,Silver Metallic,Quality Check
+VH-012,1APEX2026A0000012,Apex Sedan X,2026,Forest Green,Completed
+VH-013,1APEX2026A0000013,Apex Coupe R,2026,Pearl White,Shipped
+VH-014,1APEX2026A0000014,Apex SUV Z,2026,Midnight Blue,Completed
+VH-015,1APEX2026A0000015,Apex Sedan X,2026,Racing Red,In Assembly

@@ -1,0 +1,21 @@
+AssemblyId,Assembly_Name,Assembly_Kind,Assembly_Station
+ASM-001,Engine Block A1,Engine,Station-E1
+ASM-002,Chassis Frame C1,Chassis,Station-C1
+ASM-003,Dashboard Unit D1,Interior,Station-I1
+ASM-004,Engine Block A2,Engine,Station-E2
+ASM-005,Chassis Frame C2,Chassis,Station-C1
+ASM-006,Transmission T1,Drivetrain,Station-D1
+ASM-007,Dashboard Unit D2,Interior,Station-I2
+ASM-008,Engine Block A3,Engine,Station-E1
+ASM-009,Chassis Frame C3,Chassis,Station-C2
+ASM-010,Transmission T2,Drivetrain,Station-D1
+ASM-011,Dashboard Unit D3,Interior,Station-I1
+ASM-012,Engine Block A4,Engine,Station-E2
+ASM-013,Chassis Frame C4,Chassis,Station-C2
+ASM-014,Transmission T3,Drivetrain,Station-D2
+ASM-015,Dashboard Unit D4,Interior,Station-I2
+ASM-016,Engine Block A5,Engine,Station-E1
+ASM-017,Chassis Frame C5,Chassis,Station-C1
+ASM-018,Transmission T4,Drivetrain,Station-D2
+ASM-019,Dashboard Unit D5,Interior,Station-I1
+ASM-020,Engine Block A6,Engine,Station-E2
