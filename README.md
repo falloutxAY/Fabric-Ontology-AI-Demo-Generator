@@ -26,8 +26,7 @@ Create and deploy Microsoft Fabric Ontology demos with automated tooling and AI 
 │   └── templates/                  # Output templates
 ├── Demo-automation/       # CLI tool (uses Unofficial Fabric Ontology SDK v0.4.0)
 ├── docs/                  # Documentation
-├── AutoManufacturing-SupplyChain/  # Example demo
-└── FreshMart/             # Example demo
+└── demo-CarManufacturing/  # Example demo
 ```
 
 ## Quick Start

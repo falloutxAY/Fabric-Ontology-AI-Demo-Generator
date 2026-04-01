@@ -20,10 +20,10 @@ pip install -e .
 python -m demo_automation config init
 
 # Deploy demo
-python -m demo_automation setup ../FreshMart
+python -m demo_automation setup ../demo-CarManufacturing
 
 # Cleanup when done
-python -m demo_automation cleanup ../FreshMart
+python -m demo_automation cleanup ../demo-CarManufacturing
 ```
 
 ---
