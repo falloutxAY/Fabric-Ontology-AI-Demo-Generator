@@ -32,9 +32,8 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "rich>=13.7.0",
     "rdflib>=7.0.0",
-    # Fabric Ontology SDK for ontology operations (pinned to release tag)
-    # Use SSH for CI/CD: git+ssh://git@github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK.git@v0.4.0
-    "fabric-ontology-sdk @ git+https://github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK.git@v0.4.0",
+    # Fabric Ontology SDK for ontology operations
+    "fabric-ontology-sdk @ git+https://github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK.git",
 ]
 
 [project.optional-dependencies]

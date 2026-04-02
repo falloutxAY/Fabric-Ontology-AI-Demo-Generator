@@ -91,6 +91,7 @@ class DataBinding:
     key_column: str
     timestamp_column: Optional[str] = None  # Required for TimeSeries
     database_name: Optional[str] = None  # Required for Kusto
+    cluster_uri: Optional[str] = None  # Required for Kusto (Eventhouse cluster URI)
     property_bindings: List[PropertyBinding] = field(default_factory=list)
 
     @staticmethod
@@ -130,6 +131,9 @@ class DataBinding:
 
         if self.source_type == SourceType.KUSTO_TABLE and self.database_name:
             config["sourceTableProperties"]["databaseName"] = self.database_name
+        
+        if self.source_type == SourceType.KUSTO_TABLE and self.cluster_uri:
+            config["sourceTableProperties"]["clusterUri"] = self.cluster_uri
 
         return {
             "id": self.binding_id,
@@ -348,6 +352,7 @@ class OntologyBindingBuilder:
         timestamp_column: str,
         property_mappings: Dict[str, str],
         binding_id: Optional[str] = None,
+        cluster_uri: Optional[str] = None,
     ) -> "OntologyBindingBuilder":
         """
         Add an Eventhouse (TimeSeries) binding for an entity.
@@ -361,6 +366,7 @@ class OntologyBindingBuilder:
             timestamp_column: Column containing timestamps
             property_mappings: Map of source_column -> target_property_id
             binding_id: Optional specific binding ID
+            cluster_uri: Optional Eventhouse cluster URI (e.g., "https://xxx.kusto.fabric.microsoft.com")
 
         Returns:
             Self for chaining
@@ -376,6 +382,7 @@ class OntologyBindingBuilder:
             table_name=table_name,
             key_column=key_column,
             timestamp_column=timestamp_column,
+            cluster_uri=cluster_uri,
             property_bindings=[
                 PropertyBinding(source_column=col, target_property_id=prop_id)
                 for col, prop_id in property_mappings.items()
