@@ -2187,12 +2187,19 @@ class DemoOrchestrator:
         except Exception:
             database_name = self.config.resources.eventhouse.name
         
-        # Get the Eventhouse cluster URI (required for KustoTable bindings)
+        # Get the Eventhouse cluster URI (required for KustoTable bindings).
+        # A missing URI would produce a broken Kusto connection string, so fail
+        # explicitly rather than submitting an invalid binding to the Fabric API.
         cluster_uri = self._get_eventhouse_cluster_uri()
         if not cluster_uri:
-            logger.warning(
-                "Could not retrieve Eventhouse cluster URI. "
-                "Timeseries bindings will be created without clusterUri."
+            return StepResult(
+                status=StepStatus.FAILED,
+                message=(
+                    "Could not retrieve Eventhouse cluster URI (queryServiceUri) "
+                    "after multiple retries. Timeseries bindings require a valid "
+                    "clusterUri — aborting to prevent a broken KustoTable binding."
+                ),
+                duration_seconds=time.time() - start,
             )
         
         # Build bindings
@@ -2591,30 +2598,50 @@ class DemoOrchestrator:
             database_name=database_name,
         )
 
-    def _get_eventhouse_cluster_uri(self) -> Optional[str]:
+    def _get_eventhouse_cluster_uri(self, max_retries: int = 5, retry_delay: float = 10.0) -> Optional[str]:
         """
         Get the Eventhouse cluster URI for the current eventhouse.
-        
+
+        The Fabric API may not populate ``queryServiceUri`` immediately after
+        Eventhouse creation, so this method retries with a short delay before
+        giving up.
+
+        Args:
+            max_retries: Maximum number of GET attempts before returning None.
+            retry_delay: Seconds to wait between retries.
+
         Returns:
-            Cluster URI string or None if not available
+            Cluster URI string (e.g. "https://xxx.kusto.fabric.microsoft.com")
+            or None if the property is still absent after all retries.
         """
         if not self.state.eventhouse_id:
             return None
-        
-        try:
-            eventhouse_info = self.fabric_client.get_eventhouse(self.state.eventhouse_id)
-            # Extract cluster URI from eventhouse properties
-            properties = eventhouse_info.get("properties", {})
-            query_uri = properties.get("queryServiceUri")
-            if query_uri:
-                return query_uri
-            
-            # Fallback: construct from eventhouse name
-            workspace_name = self.config.fabric.workspace_id
-            return f"https://{self.state.eventhouse_name}.kusto.fabric.microsoft.com"
-        except Exception as e:
-            logger.warning(f"Could not get eventhouse cluster URI: {e}")
-            return None
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                eventhouse_info = self.fabric_client.get_eventhouse(self.state.eventhouse_id)
+                properties = eventhouse_info.get("properties", {})
+                query_uri = properties.get("queryServiceUri")
+                if query_uri:
+                    return query_uri
+
+                if attempt < max_retries:
+                    logger.info(
+                        f"queryServiceUri not yet available for eventhouse "
+                        f"{self.state.eventhouse_id} (attempt {attempt}/{max_retries}). "
+                        f"Retrying in {retry_delay}s…"
+                    )
+                    time.sleep(retry_delay)
+            except Exception as e:
+                logger.warning(f"Could not get eventhouse cluster URI (attempt {attempt}/{max_retries}): {e}")
+                if attempt < max_retries:
+                    time.sleep(retry_delay)
+
+        logger.error(
+            f"queryServiceUri was not populated for eventhouse {self.state.eventhouse_id} "
+            f"after {max_retries} attempts. Cannot build Kusto connection string."
+        )
+        return None
 
     def _step_verify_setup(self) -> StepResult:
         """
