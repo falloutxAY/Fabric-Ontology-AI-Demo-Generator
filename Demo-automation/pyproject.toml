@@ -33,9 +33,7 @@ dependencies = [
     "rich>=13.7.0",
     "rdflib>=7.0.0",
     # Fabric Ontology SDK for ontology operations
-    # Pinned to fix branch that patches validate_cluster_uri to accept kusto.fabric.microsoft.com
-    # Use SSH for CI/CD: git+ssh://git@github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK.git@copilot/fix-eventhouse-clusteruri-issue
-    "fabric-ontology-sdk @ git+https://github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK.git@copilot/fix-eventhouse-clusteruri-issue",
+    "fabric-ontology-sdk @ git+https://github.com/falloutxAY/Unofficial-Fabric-Ontology-SDK.git",
 ]
 
 [project.optional-dependencies]
