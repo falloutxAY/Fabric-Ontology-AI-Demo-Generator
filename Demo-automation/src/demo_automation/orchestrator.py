@@ -1730,7 +1730,22 @@ class DemoOrchestrator:
                 database_name = kql_db.get("displayName", self.config.resources.eventhouse.name)
             except Exception:
                 database_name = self.config.resources.eventhouse.name
-            
+
+            # Get the Eventhouse cluster URI (required for KustoTable bindings).
+            # A missing URI would produce a broken Kusto connection string, so fail
+            # explicitly rather than submitting an invalid binding to the Fabric API.
+            cluster_uri = self._get_eventhouse_cluster_uri()
+            if not cluster_uri:
+                return StepResult(
+                    status=StepStatus.FAILED,
+                    message=(
+                        "Could not retrieve Eventhouse cluster URI (queryServiceUri) "
+                        "after multiple retries. Timeseries bindings require a valid "
+                        "clusterUri — aborting to prevent a broken KustoTable binding."
+                    ),
+                    duration_seconds=time.time() - start,
+                )
+
             for entity_binding in yaml_config.eventhouse_entities:
                 entity_name = entity_binding.entity_name
                 entity_id = entity_name_to_id.get(entity_name)
@@ -1794,6 +1809,7 @@ class DemoOrchestrator:
                     timestamp_column=timestamp_col,
                     property_mappings=property_mappings,
                     binding_id=eventhouse_binding_id,  # New ID for entities with both binding types
+                    cluster_uri=cluster_uri,
                 )
                 eventhouse_binding_count += 1
                 logger.info(f"Added eventhouse binding: {entity_name} -> {entity_binding.table_name}")
