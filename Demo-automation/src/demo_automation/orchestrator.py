@@ -2187,6 +2187,14 @@ class DemoOrchestrator:
         except Exception:
             database_name = self.config.resources.eventhouse.name
         
+        # Get the Eventhouse cluster URI (required for KustoTable bindings)
+        cluster_uri = self._get_eventhouse_cluster_uri()
+        if not cluster_uri:
+            logger.warning(
+                "Could not retrieve Eventhouse cluster URI. "
+                "Timeseries bindings will be created without clusterUri."
+            )
+        
         # Build bindings
         builder = OntologyBindingBuilder(
             workspace_id=self.config.fabric.workspace_id,
@@ -2236,6 +2244,7 @@ class DemoOrchestrator:
                 timestamp_column=timestamp_col,
                 property_mappings=property_mappings,
                 binding_id=existing_binding_id,
+                cluster_uri=cluster_uri,
             )
             
             binding_count += 1
